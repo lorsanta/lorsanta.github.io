@@ -1,0 +1,120 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5">
+<html style="overflow: hidden; margin:0; padding:0; height:100%;">
+    <body style="overflow: hidden; background-color: #ffffff; color: #2e2e2e; font-family: monospace; overflow: hidden; margin:0; padding:0; height:100%;">
+    </body>
+    <script>
+        let computeCoordinates = (e, x0, y0) => {
+            let computeX =(angle, radius, x0) => x0 + Math.sin(angle)*radius
+            let computeY = (angle, radius, y0) => y0 - Math.cos(angle)*radius
+
+            e["x"] = computeX(e["angle"], e["radius"], x0)
+            e["y"] = computeY(e["angle"], e["radius"], y0)
+        }
+
+        let startRedirection = false
+    	let backgroundColor = 0xff
+        let moveInwardOutWard = (amount) => {
+            if(Math.floor((el[0]["angle"] - amount*2*Math.PI/steps)*1000)/1000 > 0 ) return 
+            for (let e of el) {
+                let newRadius;
+                let newScale;
+                if(amount > 0) {
+                    newRadius = e["radius"] / (1 - amount/steps)
+                    newScale = e["scale"] / (1 - amount/100*3.333)
+                }
+                else {
+                    newRadius = e["radius"] - -1*amount*(e["radius"]/steps)
+                    newScale = e["scale"] - -1*amount*(e["scale"]/100*3.333)
+                }
+
+                e["scale"] = newScale
+                e["radius"] = newRadius
+                e["angle"] -= amount*2*Math.PI/steps
+
+                computeCoordinates(e, x0, y0)
+
+                e["node"].style["transform"] = `translate(${e["x"]}px, ${e["y"]}px) rotate(${e["angle"]}rad) scale(${e["scale"]}%)`                
+            }
+
+            backgroundColor = 0xff - 2**(el.at(-1)["radius"]/100)
+            document.body.style.background = `rgb(${backgroundColor}, ${backgroundColor}, ${backgroundColor})`;
+        }
+
+        let a = document.createElement("a")
+        a["href"] = "https://www.google.com"
+        document.body.appendChild(a)
+
+        let s = "Hi! This is Lorsanta's personal website, I like coding, long walks on the beach and  the smell of summer rain."
+        const x0 = document.body.clientWidth/2;
+        const y0 = document.body.clientHeight/2
+        const steps = 30
+        let fontSize = 100
+        let el = []
+        for( let angle = 0, r = 400, scale=100, i = 0;
+             i < s.length ;// scale >= 1;
+             angle += 2*Math.PI/(steps), r-= r/steps, scale -= scale/100*3.333, i += 1/* i = (i + 1)% s.length */) {
+            
+            let p = document.createElement("p")
+            p.textContent = s.at(i)
+            p.style = `font-size: ${fontSize}px;`
+            if(i >= 48 && i < 48+"coding".length) {
+                a.appendChild(p)
+            }
+            else
+            document.body.appendChild(p)
+            let e = {"node":p, "radius": r, "angle": angle, "scale" : scale}
+            el.push(e)
+
+            computeCoordinates(e, x0, y0)
+
+            p.style = `transform-origin: center; font-size: ${fontSize}px; transform: translate(${e["x"]}px, ${e["y"]}px) rotate(${angle}rad) scale(${scale}%); margin: 0px 0px; height: min-content; width: min-content; position:absolute;`
+        }
+        
+        addEventListener("wheel", (event) => {
+            event.preventDefault();
+            let amount = event.deltaY < 0 ? 1 : -1;
+            window.requestAnimationFrame(() => {
+                moveInwardOutWard(amount)
+            });
+        }, { passive: false })
+        
+        let touch = null
+        document.addEventListener("touchstart", (event) => {
+	        event.preventDefault();
+        	const touches = event.changedTouches;
+        	touch = touches[0];
+        }, { passive: false })
+
+        document.addEventListener("touchmove", (event) => {
+            event.preventDefault();
+            const touches = event.changedTouches;
+            let amount = touch.screenY - touches[0].screenY > 0 ? 1 : -1;
+            window.requestAnimationFrame(() => {
+                moveInwardOutWard(amount)
+            });
+        }, { passive: false })
+
+        let t = 0
+        setInterval(() => {
+            moveInwardOutWard(0.1)
+            if(backgroundColor <= 0 && startRedirection == false) {
+                startRedirection = true
+                setTimeout(() => {window.location.href="https://fallout7.com"}, 1000)
+            }
+            t += 1
+            for(let i = 0; i < "lorsanta".length; i++)
+            {
+                let e = el[12+i]
+                let m = Math.sin(i*(2*Math.PI/"lorsanta".length) + t)
+                e["x"] += 15*m*Math.sin(Math.PI - e["angle"])
+                e["y"] += 15*m*Math.cos(Math.PI - e["angle"])
+                m = Math.floor((m + Math.PI/2)*0xffffff/(Math.PI))
+                e["node"].style["color"] = `rgb(${m&0xff}, ${(m&0xff00)>>8}, ${(m&0xff0000)>>16})`
+                e["node"].style["transform"] = `translate(${e["x"]}px, ${e["y"]}px) rotate(${e["angle"]}rad) scale(${e["scale"]}%)`
+            }
+
+        }, 100)
+
+</script>
+</html>
